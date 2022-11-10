@@ -15,7 +15,7 @@ int position = 0;
 String secretCode = "1423";
 
 // Keypad key matrix: 
-char keys[4][3] = 
+char keys[4][3z] = 
 {
   {'1','2','3'},
   {'4','5','6'},
