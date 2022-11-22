@@ -15,12 +15,17 @@ int position = 0;
 String secretCode = "1423";
 
 // Keypad key matrix: 
-char keys[4][3z] = 
+char keys[4][3] = 
 {
-  {'1','2','3'},
-  {'4','5','6'},
-  {'7','8','9'},
-  {'*','0','#'}
+  {'9','6','3'},
+  {'8','5','2'},
+  {'7','4','1'},
+  {'#','0','*'}
+  
+  //{'1','2','3'},
+  //{'4','5','6'},
+  //{'7','8','9'},
+  //{'*','0','#'}
 };
 
 // Keypad pin definitions
@@ -38,7 +43,6 @@ void setup()
   Serial.begin(9600);
   pinMode(LedPin, OUTPUT);
   pinMode(SolenoidPin, OUTPUT);
-   
   // Flash hello (Temporary)
   for (int i = 0; i < 3; i++)
   {
@@ -47,6 +51,7 @@ void setup()
     digitalWrite(LedPin, LOW);
     delay(100);
   }
+  setLockState(LOCKED);
 }
 
 
@@ -55,28 +60,38 @@ void loop()
    // Locked State - Monitor keypad for valid Password code entry
    if (LockState == LOCKED)
    {
-      char key = keypad.getKey();
+      char key = keypad.getKey(); //default 0
 
       if (key == '*' || key == '#')
       {
          position = 0;
          setLockState(LOCKED);
       }
-      if (key == secretCode.charAt(position))  // Valid key in Password sequence
+      if (key != 0)
       {
-        Serial.print("Matched ");   
-        Serial.print(key);   
-        Serial.print("-at-");   
-        Serial.println(position);   
-        position++;
+        if (key == secretCode.charAt(position))  // Valid key in Password sequence
+        {
+          for(int i = 0; i < 3; i++) { //temporary testing - flash on input
+            digitalWrite(LedPin, HIGH);
+            delay(100);
+            digitalWrite(LedPin, LOW);
+            delay(100);
+          }
+          Serial.print("Matched ");   
+          Serial.print(key);   
+          Serial.print("-at-");
+          Serial.println(position);
+          position++;
+        }
+        else  // Invalid key - start all over again
+        {
+          Serial.println("Invalid Code!");   
+          position = 0;
+        }
       }
-      else  // Invalid key - start all over again
-      {
-         Serial.println("Invalid Code!");   
-         position = 0;
-      }
+      
 
-      // Let the LED 'breathe' while we wait
+      // Let the LED 'breathe' while we wait (potentially superfluous)
       analogWrite(LedPin, sin((millis() % 3142) / 1000.0) * 255);
 
       if (position == secretCode.length())  // Password successfully entered - advance state
@@ -90,7 +105,7 @@ void loop()
    // UNLOCKED state - hold the solenoid open for a limited time
    else if (LockState == UNLOCKED)
    { 
-      for (int i = 0; i < 30; i++)
+      for (int i = 0; i < 100; i++)
       {
          // Flash the led to indicate the lock is open
          digitalWrite(LedPin, LOW);
@@ -113,12 +128,12 @@ void setLockState(int state)
    {
       Serial.println("Locked!");
       digitalWrite(LedPin, HIGH);
-      digitalWrite(SolenoidPin, LOW);  
-   }    
+      digitalWrite(SolenoidPin, HIGH);  
+   }
    else if (state == UNLOCKED)
    {
       Serial.println("Unlocked!");
       digitalWrite(LedPin, LOW);
-      digitalWrite(SolenoidPin, HIGH);      
+      digitalWrite(SolenoidPin, LOW);      
    }
 }
